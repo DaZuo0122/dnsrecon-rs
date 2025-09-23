@@ -77,7 +77,7 @@ pub async fn run(args: cli::Args) -> Result<(), DnsReconError> {
         cli::EnumType::Standard => {
             if let Some(ref domain) = args.domain {
                 progress.update(&format!("Performing standard enumeration for domain: {}", domain));
-                all_results.extend(perform_standard_enumeration(dns_helper.clone(), domain, &progress).await?);
+                all_results.extend(perform_standard_enumeration(dns_helper.clone(), domain, &args, &progress).await?);
             }
         },
         cli::EnumType::BruteForce => {
@@ -194,6 +194,7 @@ fn resolve_wordlist_path(wordlist_path: &str) -> Result<String, DnsReconError> {
 async fn perform_standard_enumeration(
     dns_helper: Arc<dns::resolver::DnsHelper>,
     domain: &str,
+    args: &cli::Args,
     progress: &cli::progress::TimedProgressReporter,
 ) -> Result<Vec<dns::record::DnsRecord>, DnsReconError> {
     let mut results = Vec::new();
@@ -227,7 +228,7 @@ async fn perform_standard_enumeration(
     
     progress.update("Performing crt.sh enumeration");
     // Perform crt.sh enumeration
-    match enumerate::crt_sh::scrape_crtsh_with_retry(domain, 3).await {
+    match enumerate::crt_sh::scrape_crtsh_with_retry(domain, args, 3).await {
         Ok(subdomains) => {
             progress.update(&format!("Found {} subdomains from crt.sh, resolving...", subdomains.len()));
             for subdomain in subdomains {
@@ -241,7 +242,7 @@ async fn perform_standard_enumeration(
     
     progress.update("Performing Bing enumeration");
     // Perform Bing enumeration
-    match enumerate::bing::scrape_bing_with_retry(domain, 3).await {
+    match enumerate::bing::scrape_bing_with_retry(domain, args, 3).await {
         Ok(subdomains) => {
             progress.update(&format!("Found {} subdomains from Bing, resolving...", subdomains.len()));
             for subdomain in subdomains {
@@ -255,7 +256,7 @@ async fn perform_standard_enumeration(
     
     progress.update("Performing Yandex enumeration");
     // Perform Yandex enumeration
-    match enumerate::yandex::scrape_yandex_with_retry(domain, 3).await {
+    match enumerate::yandex::scrape_yandex_with_retry(domain, args, 3).await {
         Ok(subdomains) => {
             progress.update(&format!("Found {} subdomains from Yandex, resolving...", subdomains.len()));
             for subdomain in subdomains {

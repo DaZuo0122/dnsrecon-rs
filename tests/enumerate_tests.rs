@@ -6,7 +6,9 @@ use dnsrecon_rs::enumerate::yandex;
 use dnsrecon_rs::enumerate::whois;
 use dnsrecon_rs::enumerate::brute_force;
 use dnsrecon_rs::dns::resolver::DnsHelper;
+use dnsrecon_rs::cli::Args;
 use std::sync::Arc;
+use clap::Parser;
 
 #[tokio::test]
 async fn test_crt_sh_scraping() {
@@ -14,8 +16,11 @@ async fn test_crt_sh_scraping() {
     // We'll use a domain known to have certificates
     let domain = "google.com";
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the basic scraping function
-    let result = crt_sh::scrape_crtsh(domain).await;
+    let result = crt_sh::scrape_crtsh(domain, &args).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());
@@ -37,8 +42,11 @@ async fn test_crt_sh_with_retry() {
     let domain = "google.com";
     let max_retries = 2;
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the retry function
-    let result = crt_sh::scrape_crtsh_with_retry(domain, max_retries).await;
+    let result = crt_sh::scrape_crtsh_with_retry(domain, &args, max_retries).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());
@@ -57,8 +65,11 @@ async fn test_bing_scraping() {
     // Test Bing scraping functionality
     let domain = "microsoft.com";
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the basic scraping function
-    let result = bing::scrape_bing(domain).await;
+    let result = bing::scrape_bing(domain, &args).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());
@@ -77,8 +88,11 @@ async fn test_bing_with_retry() {
     let domain = "microsoft.com";
     let max_retries = 2;
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the retry function
-    let result = bing::scrape_bing_with_retry(domain, max_retries).await;
+    let result = bing::scrape_bing_with_retry(domain, &args, max_retries).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());
@@ -96,8 +110,11 @@ async fn test_yandex_scraping() {
     // Test Yandex scraping functionality
     let domain = "yandex.ru";
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the basic scraping function
-    let result = yandex::scrape_yandex(domain).await;
+    let result = yandex::scrape_yandex(domain, &args).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());
@@ -116,8 +133,11 @@ async fn test_yandex_with_retry() {
     let domain = "yandex.ru";
     let max_retries = 2;
     
+    // Create CLI args for testing
+    let args = Args::parse_from(["dnsrecon-rs", "-d", domain]);
+    
     // Test the retry function
-    let result = yandex::scrape_yandex_with_retry(domain, max_retries).await;
+    let result = yandex::scrape_yandex_with_retry(domain, &args, max_retries).await;
     
     // The function should not panic and should return a Result
     assert!(result.is_ok() || result.is_err());

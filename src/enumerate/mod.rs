@@ -27,6 +27,9 @@ pub enum EnumerationError {
     #[error("Timeout error")]
     Timeout,
     
+    #[error("Network error: {0}")]
+    Network(String),
+    
     #[error("Other enumeration error: {0}")]
     Other(String),
 }

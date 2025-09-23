@@ -1,20 +1,21 @@
 //! Bing search enumeration
 
 use crate::enumerate::EnumerationError;
-use reqwest;
+use crate::utils::http::create_http_client;
+use crate::cli::Args;
 use scraper::{Html, Selector};
 use tokio::time::{sleep, Duration};
 use url::Url;
 
 /// Scrape Bing for subdomains of a domain
-pub async fn scrape_bing(domain: &str) -> Result<Vec<String>, EnumerationError> {
+pub async fn scrape_bing(domain: &str, args: &Args) -> Result<Vec<String>, EnumerationError> {
     let mut subdomains = Vec::new();
     
-    // Create HTTP client with reasonable timeouts
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
-        .user_agent("Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)")
-        .build()?;
+    // Create HTTP client with appropriate settings
+    let client = create_http_client(
+        args,
+        "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+    )?;
     
     // Perform multiple searches with pagination
     for i in (1..=150).step_by(10) {
@@ -91,11 +92,11 @@ pub async fn scrape_bing(domain: &str) -> Result<Vec<String>, EnumerationError> 
 }
 
 /// Scrape Bing with retry logic for subdomains of a domain
-pub async fn scrape_bing_with_retry(domain: &str, max_retries: u32) -> Result<Vec<String>, EnumerationError> {
+pub async fn scrape_bing_with_retry(domain: &str, args: &Args, max_retries: u32) -> Result<Vec<String>, EnumerationError> {
     let mut retries = 0;
     
     loop {
-        match scrape_bing(domain).await {
+        match scrape_bing(domain, args).await {
             Ok(subdomains) => return Ok(subdomains),
             Err(e) => {
                 if retries >= max_retries {

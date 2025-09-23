@@ -3,6 +3,7 @@
 //! This module provides various utility functions used throughout the application.
 
 pub mod cidr;
+pub mod http;
 pub mod validation;
 
 /// Remove duplicates from a vector while preserving order

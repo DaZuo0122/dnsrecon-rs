@@ -1,19 +1,20 @@
 //! Certificate Transparency log scraping from crt.sh
 
 use crate::enumerate::EnumerationError;
-use reqwest;
+use crate::utils::http::create_http_client;
+use crate::cli::Args;
 use scraper::{Html, Selector};
 use tokio::time::{sleep, Duration};
 
 /// Scrape crt.sh for subdomains of a domain
-pub async fn scrape_crtsh(domain: &str) -> Result<Vec<String>, EnumerationError> {
+pub async fn scrape_crtsh(domain: &str, args: &Args) -> Result<Vec<String>, EnumerationError> {
     let url = format!("https://crt.sh/?q=%.{}", domain);
     
-    // Create HTTP client with reasonable timeouts
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
-        .user_agent("Mozilla/5.0 (compatible; DNSRecon-rs/0.1; +https://github.com/example/dnsrecon-rs)")
-        .build()?;
+    // Create HTTP client with appropriate settings
+    let client = create_http_client(
+        args,
+        "Mozilla/5.0 (compatible; DNSRecon-rs/0.1; +https://github.com/example/dnsrecon-rs)"
+    )?;
     
     // Send request
     let response = client.get(&url).send().await?;
@@ -45,11 +46,11 @@ pub async fn scrape_crtsh(domain: &str) -> Result<Vec<String>, EnumerationError>
 }
 
 /// Scrape crt.sh with retry logic for subdomains of a domain
-pub async fn scrape_crtsh_with_retry(domain: &str, max_retries: u32) -> Result<Vec<String>, EnumerationError> {
+pub async fn scrape_crtsh_with_retry(domain: &str, args: &Args, max_retries: u32) -> Result<Vec<String>, EnumerationError> {
     let mut retries = 0;
     
     loop {
-        match scrape_crtsh(domain).await {
+        match scrape_crtsh(domain, args).await {
             Ok(subdomains) => return Ok(subdomains),
             Err(e) => {
                 if retries >= max_retries {

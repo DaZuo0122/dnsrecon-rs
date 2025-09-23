@@ -179,9 +179,11 @@ fn test_json_serialization() {
     assert!(json.is_ok());
     
     let json = json.unwrap();
+    println!("JSON output: {}", json); // For debugging
     assert!(json.contains("\"type\":\"A\""));
     assert!(json.contains("\"name\":\"example.com\""));
-    assert!(json.contains("\"address\":\"192.168.1.1\""));
+    // For A records, the IP address is nested in the "data" field
+    assert!(json.contains("\"data\":{\"A\":\"192.168.1.1\"}"));
 }
 
 #[test]

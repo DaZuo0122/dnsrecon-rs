@@ -15,7 +15,6 @@ fn test_check_wildcard() {
 fn test_expand_range() {
     // Test expanding a single IP (should return just that IP)
     let input_range = "192.0.2.0";
-    let end_ip = "192.0.2.0";
     
     // Simulating the expand_range function behavior
     let result = vec![input_range.to_string()];
@@ -24,8 +23,8 @@ fn test_expand_range() {
     assert_eq!(result[0], "192.0.2.0");
     
     // Test expanding a range of IPs
-    let start_ip = "192.0.2.0";
-    let end_ip = "192.0.2.3";
+    // let start_ip = "192.0.2.0";
+    // let end_ip = "192.0.2.3";
     
     // Simulating the expand_range function behavior
     let result = vec![

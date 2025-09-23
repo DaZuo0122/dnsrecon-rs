@@ -37,6 +37,7 @@ pub struct Args {
     pub domain: Option<String>,
     
     /// Type of enumeration to perform
+	/// Available types: std, brt, zonewalk, reverse
     #[arg(short, long, value_parser = parse_enum_type, default_value = "std")]
     pub r#type: EnumType,
     
@@ -83,10 +84,14 @@ pub struct Args {
     /// Perform a reverse lookup of a given CIDR or IP range from a file
     #[arg(short = 'R', long)]
     pub range_file: Option<String>,
+    
+    /// HTTP proxy to use for requests (format: http://proxy:port or socks5://proxy:port)
+    #[arg(long)]
+    pub proxy: Option<String>,
 }
 
 /// Types of enumeration that can be performed
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EnumType {
     /// Standard enumeration
     Standard,
