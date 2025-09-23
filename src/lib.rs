@@ -79,17 +79,16 @@ pub async fn run(args: cli::Args) -> Result<(), DnsReconError> {
         },
         cli::EnumType::BruteForce => {
             if let Some(ref domain) = args.domain {
-                if let Some(ref wordlist) = args.dict {
-                    progress.update(&format!("Performing brute force enumeration for domain: {}", domain));
-                    all_results.extend(
-                        enumerate::brute_force::brute_force_concurrent(
-                            domain,
-                            wordlist,
-                            dns_helper.clone(),
-                            args.concurrency
-                        ).await?
-                    );
-                }
+                let wordlist = args.dict.as_ref().map(|s| s.as_str()).unwrap_or("data/subdomains-top1mil-5000.txt");
+                progress.update(&format!("Performing brute force enumeration for domain: {} with wordlist: {}", domain, wordlist));
+                all_results.extend(
+                    enumerate::brute_force::brute_force_concurrent(
+                        domain,
+                        wordlist,
+                        dns_helper.clone(),
+                        args.concurrency
+                    ).await?
+                );
             }
         },
         cli::EnumType::ZoneWalk => {

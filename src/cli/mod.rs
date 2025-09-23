@@ -52,7 +52,7 @@ pub struct Args {
     #[arg(short = 's', long)]
     pub sqlite_file: Option<String>,
     
-    /// Wordlist for brute force enumeration
+    /// Wordlist for brute force enumeration (default: data/subdomains-top1mil-5000.txt)
     #[arg(short = 'D', long)]
     pub dict: Option<String>,
     
@@ -132,9 +132,9 @@ pub fn validate_args(args: &Args) -> Result<(), CliError> {
     // Validate wordlist is provided for brute force
     if let EnumType::BruteForce = args.r#type {
         if args.dict.is_none() {
-            return Err(CliError::InvalidArgument(
-                "Wordlist must be specified for brute force enumeration".to_string()
-            ));
+            // Use default wordlist if none provided
+            // Default to subdomains-top1mil-5000.txt for a balance of speed and coverage
+            eprintln!("No wordlist specified, using default: data/subdomains-top1mil-5000.txt");
         }
     }
     
