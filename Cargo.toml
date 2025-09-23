@@ -29,6 +29,7 @@ rand = "0.8"
 url = "2.5"
 tokio-stream = "0.1"
 futures-util = "0.3"
+dunce = "1.0.5"
 
 [dev-dependencies]
 tokio-test = "0.4"
