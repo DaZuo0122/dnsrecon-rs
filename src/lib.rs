@@ -10,9 +10,12 @@ pub mod enumerate;
 pub mod output;
 pub mod utils;
 
+use std::path::PathBuf;
+
 use thiserror::Error;
 use std::sync::Arc;
 use std::net::IpAddr;
+use std::collections::HashSet;
 use crate::cli::progress::ProgressReporter;
 
 /// Main error type for the application
@@ -80,11 +83,13 @@ pub async fn run(args: cli::Args) -> Result<(), DnsReconError> {
         cli::EnumType::BruteForce => {
             if let Some(ref domain) = args.domain {
                 let wordlist = args.dict.as_ref().map(|s| s.as_str()).unwrap_or("data/subdomains-top1mil-5000.txt");
-                progress.update(&format!("Performing brute force enumeration for domain: {} with wordlist: {}", domain, wordlist));
+                // Resolve the wordlist path correctly
+                let resolved_wordlist = resolve_wordlist_path(wordlist)?;
+                progress.update(&format!("Performing brute force enumeration for domain: {} with wordlist: {}", domain, resolved_wordlist));
                 all_results.extend(
                     enumerate::brute_force::brute_force_concurrent(
                         domain,
-                        wordlist,
+                        &resolved_wordlist,
                         dns_helper.clone(),
                         args.concurrency
                     ).await?
@@ -106,6 +111,9 @@ pub async fn run(args: cli::Args) -> Result<(), DnsReconError> {
     }
     
     progress.update(&format!("Enumeration completed. Found {} records", all_results.len()));
+    
+    // Deduplicate results by name (case-insensitive)
+    let all_results = deduplicate_records(all_results);
     
     // Output results
     if let Some(ref json_file) = args.json_file {
@@ -133,6 +141,53 @@ pub async fn run(args: cli::Args) -> Result<(), DnsReconError> {
     progress.finish(&format!("DNS enumeration completed successfully in {:.2}s", progress.elapsed().as_secs_f32()));
     
     Ok(())
+}
+
+/// Deduplicate DNS records by name (case-insensitive)
+fn deduplicate_records(records: Vec<dns::record::DnsRecord>) -> Vec<dns::record::DnsRecord> {
+    let mut seen_names = HashSet::new();
+    let mut deduplicated = Vec::new();
+    
+    for record in records {
+        // Convert name to lowercase for case-insensitive comparison
+        let name_lower = record.name.to_lowercase();
+        
+        // Only add if we haven't seen this name before
+        if seen_names.insert(name_lower) {
+            deduplicated.push(record);
+        }
+    }
+    
+    deduplicated
+}
+
+/// Resolve the wordlist path, handling both absolute paths and paths relative to the executable
+fn resolve_wordlist_path(wordlist_path: &str) -> Result<String, DnsReconError> {
+    // If it's already an absolute path, return as is
+    let path = PathBuf::from(wordlist_path);
+    if path.is_absolute() {
+        return Ok(wordlist_path.to_string());
+    }
+    
+    // Try to get the executable path
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(parent) = exe_path.parent() {
+            // Construct path relative to executable directory
+            let data_path = parent.join(wordlist_path);
+            if data_path.exists() {
+                return Ok(data_path.to_string_lossy().to_string());
+            }
+            
+            // Try one level up (in case executable is in a bin directory)
+            let data_path = parent.parent().unwrap_or(parent).join(wordlist_path);
+            if data_path.exists() {
+                return Ok(data_path.to_string_lossy().to_string());
+            }
+        }
+    }
+    
+    // Fall back to current behavior (relative to current working directory)
+    Ok(wordlist_path.to_string())
 }
 
 /// Perform standard enumeration techniques
