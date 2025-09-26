@@ -15,21 +15,33 @@ pub enum CliError {
     
     #[error("Argument parsing error: {0}")]
     ParseError(String),
+    
+    #[error(transparent)]
+    Clap(#[from] clap::Error),
 }
 
 /// Parse command line arguments
 pub fn parse_args() -> Result<Args, CliError> {
-    Args::try_parse().map_err(|e| CliError::ParseError(e.to_string()))
+    match Args::try_parse() {
+        Ok(args) => Ok(args),
+        Err(e) => {
+            // Handle help and version requests by letting Clap display them and exit
+            match e.kind() {
+                clap::error::ErrorKind::DisplayHelp | clap::error::ErrorKind::DisplayVersion => {
+                    let _ = e.print();  // Print help/version, ignore potential error
+                    std::process::exit(0);
+                }
+                _ => Err(CliError::Clap(e)),
+            }
+        }
+    }
 }
 
 /// Main arguments structure
 #[derive(Parser, Debug)]
 #[command(
-    name = "dnsrecon-rs",
     version = "0.1.0",
-    author = "Your Name <your.email@example.com>",
     about = "DNS Enumeration Tool - Rust Implementation",
-    long_about = "A high-performance DNS enumeration tool written in Rust, based on the original DNSRecon Python tool."
 )]
 pub struct Args {
     /// Domain to enumerate

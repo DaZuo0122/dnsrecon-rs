@@ -15,6 +15,8 @@ async fn main() {
     let args = match dnsrecon_rs::cli::parse_args() {
         Ok(args) => args,
         Err(e) => {
+            // Clap errors (like real parsing errors) will be handled by the function
+            // If we reach here, it means it was a non-Clap error
             eprintln!("Error parsing arguments: {}", e);
             process::exit(1);
         }
